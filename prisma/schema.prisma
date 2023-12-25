@@ -32,3 +32,12 @@ model Book {
 
   @@map("Books")
 }
+
+model AccessToken {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  token     String
+
+  @@map("AccessTokens")
+}
