@@ -1,5 +1,6 @@
 import {
    ForbiddenException,
+   Global,
    Injectable,
    UnauthorizedException,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ export class AuthService {
       private readonly jwtService: JwtService,
    ) {}
 
+   // Register New User
    async register(creds: RegisterDto): Promise<User> {
       const { email, name, pwd } = creds;
 
@@ -36,6 +38,7 @@ export class AuthService {
       }
    }
 
+   // User Login
    async login(creds: LoginDto): Promise<string> {
       const user = await this.dbService.user.findUnique({
          where: {
@@ -59,6 +62,35 @@ export class AuthService {
          { secret: process.env.JWT_SECRET },
       );
 
+      // Whitelist the token
+      await this.dbService.accessToken.create({
+         data: {
+            token,
+         },
+      });
+
       return token;
+   }
+
+   async logOut(token: string) {
+      try {
+         await this.dbService.accessToken.delete({
+            where: {
+               token,
+            },
+         });
+
+         return { message: 'Logged out seccessfully' };
+      } catch (error) {
+         throw new UnauthorizedException();
+      }
+   }
+
+   async isTokenValid(token: string): Promise<boolean> {
+      const found = await this.dbService.accessToken.findUnique({
+         where: { token: token },
+      });
+
+      return Boolean(found);
    }
 }
